@@ -2,22 +2,68 @@
 title: "hw4"
 author: "Nick McManus"
 date: "5/21/2022"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    theme: cerulean
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+    collapsed: yes
+    smooth_scroll: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyverse)
 library(here)
 library(janitor)
+library(equatiomatic)
 ```
 
 ```{r}
 # read in data
-warming <- read_csv(here("data", "warming.csv"))
-damages <- read_csv(here("data", "damages.csv"))
+warming <- read_csv(here("data", "warming.csv")) %>% 
+  select(-1)
+damages <- read_csv(here("data", "damages.csv")) #in degrees C
 ```
 
+### Question 1
+
+Using damages.csv, estimate a quadratic damage function relating the dollar value of damages
+to the change in global mean temperature. Estimate a model with a zero intercept because
+damages by construction must equal zero when there is no climate change. Plot your estimated
+damage function, overlaid with a scatterplot of the underlying data.
+
+```{r}
+#make a new column with warming^2 to derive a quadratic model
+damages <- damages %>% 
+  mutate(warming2 = warming^2)
+
+#run a linear regression using the new warming^2 and the original warming 
+damages_model <- lm(damages ~ 0 + warming + warming2, data = damages)
+
+summary(damages_model)
+
+#make a function out of the model results 
+damages_function <- function(x){
+  damages_model$coefficients[1]*x+damages_model$coefficients[2]*x^2
+}
+
+#output equation
+extract_eq(model = damages_quad_model, use_coefs = TRUE, coef_digits = 2)
+```
+
+
+```{r}
+ggplot(data = damages, aes(x = warming, y = damages)) +
+  geom_point(alpha = 0.2, size = 1.8, color = "sienna")+
+  stat_function(fun = damages_function, color = "slateblue4", size = 1) +
+  theme_classic()+
+  labs(x = "\nWarming (Degrees C)",
+       y = "Damages ($)\n",
+       title = "Damages vs. Global Temperature Change")
+```
 
 
 
