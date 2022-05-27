@@ -29,9 +29,7 @@ damages <- read_csv(here("data", "damages.csv")) #in degrees C
 
 ### Q1: Estimated Damages
 
-Using `damages.csv`, estimate a quadratic damage function relating the dollar value of damages to the change in global mean temperature.
-
--   Estimate a model with a zero intercept because damages by construction must equal zero when there is no climate change. Plot your estimated damage function, overlaid with a scatterplot of the underlying data.
+**Using `damages.csv`, estimate a quadratic damage function relating the dollar value of damages to the change in global mean temperature. Estimate a model with a zero intercept because damages by construction must equal zero when there is no climate change. Plot your estimated damage function, overlaid with a scatterplot of the underlying data.**
 
 ```{r}
 # create new column with squared values to derive quadratic model
@@ -64,15 +62,12 @@ ggplot(data = damages, aes(x = warming, y = damages)) +
 
 ### Q2: Damages under different scenarios
 
-Use `warming.csv` and your estimated damage function to predict damages in each year under the Baseline climate and the pulse scenario. Make four plots:
+**Use `warming.csv` and your estimated damage function to predict damages in each year under the Baseline climate and the pulse scenario. Make four plots:**
 
-1.  Damages over time without the pulse,
-
-2.  Damages over time with the pulse
-
-3.  The difference in damages over time that arises from the pulse, and
-
-4.  The difference in damages over time from the pulse per ton of CO2 (you can assume that each ton of the pulse causes the same amount of damage).
+1.  **Damages over time without the pulse**
+2.  **Damages over time with the pulse**
+3.  **The difference in damages over time that arises from the pulse, and**
+4.  **The difference in damages over time from the pulse per ton of CO2 (you can assume that each ton of the pulse causes the same amount of damage).**
 
 ```{r}
 # assign value to one-time pulse of 35 billion tons CO2
@@ -128,7 +123,7 @@ ggplot(data = warming_damages, aes(x = year, y = damages_diff_co2)) +
 
 ### Q3: Social Cost of Carbon
 
-The SCC is the present discounted value of the stream of future damages caused by one additional ton of CO2. The Obama Administration used a discount rate of 3% to discount damages. Recently, New York State used a discount rate of 2%. Calculate and make a plot of the SCC (y-axis) against the discount rate (x-axis) for a reasonable range of discount rates. Explain the intuition for how the discount rate affects the SCC.
+**The SCC is the present discounted value of the stream of future damages caused by one additional ton of CO2. The Obama Administration used a discount rate of 3% to discount damages. Recently, New York State used a discount rate of 2%. Calculate and make a plot of the SCC (y-axis) against the discount rate (x-axis) for a reasonable range of discount rates. Explain the intuition for how the discount rate affects the SCC.**
 
 ```{r}
 # assign value to starting year of 2022
@@ -144,18 +139,13 @@ warming_damages_scc <- warming_damages %>%
   mutate(pv_4 = damages_diff_co2*((1+0.04)^(-(year-baseline_year)))) %>%
   mutate(pv_5 = damages_diff_co2*((1+0.05)^(-(year-baseline_year)))) %>%
   mutate(pv_6 = damages_diff_co2*((1+0.06)^(-(year-baseline_year)))) %>%
-  mutate(pv_7 = damages_diff_co2*((1+0.07)^(-(year-baseline_year)))) %>%
-  mutate(pv_8 = damages_diff_co2*((1+0.08)^(-(year-baseline_year)))) %>%
-  mutate(pv_9 = damages_diff_co2*((1+0.09)^(-(year-baseline_year)))) %>%
-  mutate(pv_10 = damages_diff_co2*((1+0.1)^(-(year-baseline_year))))
+  mutate(pv_7 = damages_diff_co2*((1+0.07)^(-(year-baseline_year)))) 
 
-discount_rates <- c(0,1,2,3,4,5,6,7,8,9,10)
+discount_rates <- c(0,1,2,3,4,5,6,7)
 scc_calc <- c(sum(warming_damages_scc$pv_0),sum(warming_damages_scc$pv_1),
                        sum(warming_damages_scc$pv_2),sum(warming_damages_scc$pv_3),
                        sum(warming_damages_scc$pv_4),sum(warming_damages_scc$pv_5),
-                       sum(warming_damages_scc$pv_6),sum(warming_damages_scc$pv_7),
-                       sum(warming_damages_scc$pv_8),sum(warming_damages_scc$pv_9),
-                       sum(warming_damages_scc$pv_10))
+                       sum(warming_damages_scc$pv_6),sum(warming_damages_scc$pv_7))
 
 scc_df <- data.frame(discount_rates,
                      scc_calc)
@@ -165,13 +155,12 @@ scc_df <- data.frame(discount_rates,
 ```{r}
 # plot the discount rates and SCC
 ggplot(data = scc_df, aes(x = discount_rates, y = scc_calc)) +
-  geom_point(color = "black") +
-  geom_smooth(se = 0)+
+  geom_point(color = "black", size = 2) +
   theme_classic() +
   labs(x = "\nDiscount rate (%)",
        y = "SCC ($/ton of CO2)\n",
        title = "SCC at Various Discount Rates") +
-  scale_x_continuous(breaks = seq(0, 10, by = 1))
+  scale_x_continuous(breaks = seq(0, 7, by = 1))
 ```
 
 Discount rates determine the social cost of carbon. The greater the discount rate, the lower the social cost of carbon is considered to be. Highly discounting the benefits of emission reductions has great implications for climate change mitigation as it decreases motivation for climate policy. This is because a higher discount rate indicates a higher value placed on immediate benefits compared to future benefits, so society is less willing to take on the costs of climate action. In essence, higher discount rates treat the future as less valuable.
@@ -179,8 +168,9 @@ Discount rates determine the social cost of carbon. The greater the discount rat
 
 ### Q4: Ramsey Rule
 
-The National Academies of Sciences, Engineering, and Medicine advised the government in a 2017 report to use the Ramsey Rule when discounting within the SCC calculation:$r = ρ + ηg$
-Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC? Locate this point on your graph from above.
+**The National Academies of Sciences, Engineering, and Medicine advised the government in a 2017 report to use the Ramsey Rule when discounting within the SCC calculation:** $r = ρ + ηg$
+
+**Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC? Locate this point on your graph from above.**
 
 ```{r}
 # find the discount rate (as percent) according to NASEM
@@ -196,19 +186,18 @@ scc_ramsey <- sum(warming_damages_ramsey$pv_ramsey)
 
 ```{r}
 # plot with Ramsey Rule discount rate
-
 ggplot(data = scc_df, aes(x = discount_rates, y = scc_calc)) +
-  geom_point(color = "black", size = 2, alpha = 0.3) +
+  geom_point(color = "black", size = 2, alpha = 0.4) +
   theme_classic() +
   labs(x = "\nDiscount rate (%)",
        y = "SCC ($/ton of CO2)\n",
        title = "SCC of Ramsey Rule") +
   geom_vline(xintercept = 2.1, color = "slateblue1", linetype = "dashed") +
   geom_point(aes(x = 2.1, y = 71.35), color = "slateblue4", size = 2.5, alpha = 0.8) +
-  scale_x_continuous(breaks = seq(0, 10, by = 1))
+  scale_x_continuous(breaks = seq(0, 7, by = 1))
 ```
 
-Using the Ramsey Rule as advised by the National Academies of Sciences, Engineering, and Medicine, the SCC is #`r round(scc_ramsey,2)` with a discount rate of `r r_ramsey`%, as is indicated by the blue point on the graph above.
+Using the Ramsey Rule as advised by the National Academies of Sciences, Engineering, and Medicine, the SCC is $`r round(scc_ramsey,2)` with a discount rate of `r r_ramsey`%, as is indicated by the blue point on the graph above.
 
 
 ### Q5: Choosing between two policies
