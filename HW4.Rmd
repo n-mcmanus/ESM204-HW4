@@ -166,7 +166,7 @@ scc_df <- data.frame(discount_rates,
 # plot the discount rates and SCC
 ggplot(data = scc_df, aes(x = discount_rates, y = scc_calc)) +
   geom_point(color = "black") +
-  geom_line(size = 1)+
+  geom_smooth(se = 0)+
   theme_classic() +
   labs(x = "\nDiscount rate (%)",
        y = "SCC ($/ton of CO2)\n",
@@ -177,9 +177,10 @@ ggplot(data = scc_df, aes(x = discount_rates, y = scc_calc)) +
 Discount rates determine the social cost of carbon. The greater the discount rate, the lower the social cost of carbon is considered to be. Highly discounting the benefits of emission reductions has great implications for climate change mitigation as it decreases motivation for climate policy. This is because a higher discount rate indicates a higher value placed on immediate benefits compared to future benefits, so society is less willing to take on the costs of climate action. In essence, higher discount rates treat the future as less valuable.
 
 
-### Question 4: Ramsey Rule
+### Q4: Ramsey Rule
 
-The National Academies of Sciences, Engineering, and Medicine advised the government in a 2017 report to use the Ramsey Rule when discounting within the SCC calculation: r = ρ + ηg Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC? Locate this point on your graph from above.
+The National Academies of Sciences, Engineering, and Medicine advised the government in a 2017 report to use the Ramsey Rule when discounting within the SCC calculation:$r = ρ + ηg$
+Using ρ = 0.001, η = 2, and g = 0.01, what is the SCC? Locate this point on your graph from above.
 
 ```{r}
 # find the discount rate (as percent) according to NASEM
@@ -203,28 +204,16 @@ ggplot(data = scc_df, aes(x = discount_rates, y = scc_calc)) +
        y = "SCC ($/ton of CO2)\n",
        title = "SCC of Ramsey Rule") +
   geom_vline(xintercept = 2.1, color = "slateblue1", linetype = "dashed") +
-  geom_label(aes(x = 2.1, label = "Ramsey Rule: SCC = $71.35", y = 90), colour="slateblue4", angle = 90) +
-  geom_point(aes(x = 2.1, y = 71.35), color = "slateblue4", size = 2.5) +
+  geom_point(aes(x = 2.1, y = 71.35), color = "slateblue4", size = 2.5, alpha = 0.8) +
   scale_x_continuous(breaks = seq(0, 10, by = 1))
 ```
 
 Using the Ramsey Rule as advised by the National Academies of Sciences, Engineering, and Medicine, the SCC is #`r round(scc_ramsey,2)` with a discount rate of `r r_ramsey`%, as is indicated by the blue point on the graph above.
 
 
-### Question 5: Choosing between two policies
+### Q5: Choosing between two policies
 
-Now suppose there are two possible climate policies that can be pursued. Policy A is business as usual and Policy B is to take immediate and strong action on climate change. Use these facts:
-
--   If you undertake Policy A there are two possible outcomes. Either warming will occur as in the "baseline" (i.e. "no-pulse") dataset above (this happens with probability 0.5) or warming each year will be 1.5 times that in the "baseline" dataset (with probability 0.5).
-
--   Under Policy B, warming will continue until 2050 as in the "baseline" dataset, and then will stabilize at 1.29 degrees and stay that way forever.
-
--   Society is risk neutral
-
--   Use a discount rate of 2%
-
-What is the expected present value of damages up to 2100 under Policy A? What is the expected present value of damages up to 2100 under Policy B?
-
+**What is the expected present value of damages up to 2100 under Policy A? What is the expected present value of damages up to 2100 under Policy B?** 
 ```{r}
 # set discount rate for both policies
 policy_discount_rate <- 0.02
@@ -246,14 +235,11 @@ exp_pv_a2 <- sum(warming_damages_policy_a$pv_2)
 
 # expected present value of damages up to 2100 
 exp_pv_policy_a <- prob_a1 * exp_pv_a1 + prob_a2 * exp_pv_a2
-# convert to billions because number so large
-exp_pv_policy_a_billions <- exp_pv_policy_a/1000000000
+# convert to trillions because number so large
+exp_pv_policy_a_trillions <- exp_pv_policy_a/1000000000000
 
 ```
 
-Policy A: Business as Usual
-
-The expected present value of damages up to 2100 under policy A is \$`r exp_pv_policy_a_billions` billion.
 
 ```{r}
 # Policy B
@@ -272,15 +258,13 @@ prob_b <- 1.0
 
 # expected present value of damages up to 2100
 exp_pv_policy_b <- sum(warming_damages_policy_b$pv_b)*prob_b
-# convert to billions because number so large
-exp_pv_policy_b_billions <- exp_pv_policy_b/1000000000
+# convert to trillions because number so large
+exp_pv_policy_b_trillions <- exp_pv_policy_b/1000000000000
 ```
 
-Policy B: Strong Action on climate change
+Under Policy A (business as usual), the expected present value of damages up to 2100 is $`r round(exp_pv_policy_a_trillions,2)` trillion. Under Policy B (strong, immediate action on climate change), the expected present value of damages up to 2100 is $`r round(exp_pv_policy_b_trillions,2)` trillion.
 
-The expected present value of damages up to 2100 under policy B is \$`r exp_pv_policy_b_billions` billion.
-
-Suppose undertaking Policy A costs zero and undertaking Policy B costs X. The total cost of a policy is the implementation cost plus expected damages. Make a plot of total cost of Policy A and total cost of Policy B against X. Suppose Congress wants to undertake the policy with the lower total cost. Use your graph to advise Congress.
+**Suppose undertaking Policy A costs zero and undertaking Policy B costs X. The total cost of a policy is the implementation cost plus expected damages. Make a plot of total cost of Policy A and total cost of Policy B against X. Suppose Congress wants to undertake the policy with the lower total cost. Use your graph to advise Congress.**
 
 ```{r}
 # create fxns for cost policies A and B
@@ -310,11 +294,21 @@ ggplot(data = costs_df_long, aes(x = costs, y = total_cost)) +
   theme_classic() +
   labs(x = "Initial Cost of Policy B ($)",
        y = "Expected Value of Policy ($)",
-       title = "Total Costs of Policies A and B") +
+       title = "Expected Value vs. Initial Cost of Policy") +
   theme(title = element_text(face = "bold"))
 
 
 #find point where policy a cost = policy b cost using uniroot()
-#dif_costs_fun <- function(x){ev_a-(ev_b+x)}
-#equal_cost <- uniroot(dif_costs_fun, c(1e15,2.5e15))$root
+dif_costs_fun <- function(x){exp_pv_policy_a - (exp_pv_policy_b + x)}
+equal_cost <- uniroot(dif_costs_fun, c(1e15,2.5e15))$root
 ```
+
+Using the initial cost of Policy B as $`r equal_cost` both policies will have equivalent expected values. If Policy B were to cost any less than that initial cost, Congress should undertake Policy B. On the other hand, if Policy B were to cost more than this initial amount, Congress should undertake Policy A.
+
+
+### Q6: Risk Aversion
+
+**Now suppose that society is risk averse. How do you think this would change your advice to Congress?**
+
+A risk averse society would prefer Policy B because it projects lower future damages as opposed to the high cost outcome of Policy A. It would be necessary to tell Congress to evaluate expected damages of each policy by plugging in each policy’s estimated costs to the function used to determine society’s utility. In order to determine the true cost of each policy, Congress should add the costs of each individual policy to their respective expected damages. This will allow Congress to determine which policy has the lowest expected costs, which is preferred by a risk averse society.
+
